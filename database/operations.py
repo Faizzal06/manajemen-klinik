@@ -32,6 +32,14 @@ class ClinicRepository:
         # TODO (Anggota 2): Ambil 1 pasien; raise PatientNotFoundError jika tidak ada
         pass
 
+    def get_patient_by_no_rm(self, no_rm: str) -> Patient:
+        # TODO (Anggota 2): Ambil pasien berdasarkan nomor rekam medis
+        pass
+
+    def next_no_rm(self) -> str:
+        # TODO (Anggota 2): Buat nomor rekam medis berikutnya dengan format RM-0001
+        pass
+
     def update_patient(self, patient: Patient) -> None:
         # TODO (Anggota 2): Update data pasien
         pass
@@ -74,6 +82,22 @@ class ClinicRepository:
         # TODO (Anggota 4): Ambil semua janji beserta objek Patient & Doctor
         pass
 
+    def get_appointment_by_id(self, appointment_id: int) -> Appointment:
+        # TODO (Anggota 4): Ambil 1 janji; raise error khusus jika tidak ditemukan
+        pass
+
+    def get_appointments_by_patient(self, patient_id: int) -> list[Appointment]:
+        # TODO (Anggota 4): Ambil janji milik pasien tertentu
+        pass
+
+    def get_appointments_by_doctor(self, doctor_id: int) -> list[Appointment]:
+        # TODO (Anggota 4): Ambil janji milik dokter tertentu
+        pass
+
+    def get_booked_times(self, doctor_id: int, tanggal: str) -> list[str]:
+        # TODO (Anggota 4): Ambil daftar waktu yang sudah terisi pada dokter dan tanggal tersebut
+        pass
+
     def update_examination(self, appointment_id: int, diagnosis: str, tindakan: str) -> None:
         # TODO (Anggota 4): Simpan hasil pemeriksaan dan ubah status menjadi 'Selesai'
         pass
@@ -84,4 +108,19 @@ class ClinicRepository:
 
     def get_patient_history(self, patient_id: int) -> list[Appointment]:
         # TODO (Anggota 4): Ambil riwayat kunjungan/pemeriksaan berdasarkan patient_id
+        pass
+
+    # ==========================================
+    # STATISTIK DASHBOARD (Anggota 1)
+    # ==========================================
+    def count_patients(self) -> int:
+        # TODO (Anggota 1): Hitung total pasien untuk dashboard admin
+        pass
+
+    def count_doctors(self) -> int:
+        # TODO (Anggota 1): Hitung total dokter untuk dashboard admin
+        pass
+
+    def count_active_appointments(self) -> int:
+        # TODO (Anggota 1): Hitung janji berstatus 'Terjadwal'
         pass

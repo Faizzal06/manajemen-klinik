@@ -4,4 +4,9 @@ from .clinic_exceptions import (
     PatientNotFoundError,
     DoctorNotFoundError,
     DuplicateMedicalRecordError,
+    AuthenticationError,
+    UsernameAlreadyExistsError,
+    AccountNotFoundError,
+    InvalidAccountDataError,
+    UnauthorizedActionError,
 )

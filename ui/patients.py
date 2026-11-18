@@ -4,5 +4,7 @@ from database import ClinicRepository
 
 def render_patients_page(repo: ClinicRepository) -> None:
     st.header("🧑‍⚕️ Manajemen Pasien")
-    # TODO (Anggota 2): Buat tab/form tambah pasien, kolom pencarian, tabel data pasien, serta fitur edit & hapus
+    # TODO (Anggota 2): Buat tab/form tambah pasien, kolom pencarian, tabel data pasien,
+    # serta fitur edit & hapus.
+    # Catatan: akun login pasien dibuat mandiri melalui halaman login (tab Daftar Pasien).
     st.info("Halaman Manajemen Pasien siap diimplementasikan.")

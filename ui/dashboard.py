@@ -4,7 +4,8 @@ from database import ClinicRepository
 
 def render_dashboard(repo: ClinicRepository) -> None:
     st.header("📊 Dashboard Klinik")
-    # TODO (Anggota 1): Ambil total pasien, dokter, dan janji dari repo, lalu tampilkan dengan st.metric
+    # TODO (Anggota 1): Ambil total pasien, dokter, dan janji dari repo, lalu tampilkan dengan st.metric.
+    # Dashboard ini khusus admin. Dashboard dokter dan pasien ada di doctor_portal.py / patient_portal.py.
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Pasien", 0)
     col2.metric("Total Dokter", 0)

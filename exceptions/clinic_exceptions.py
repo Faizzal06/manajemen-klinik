@@ -21,3 +21,28 @@ class DoctorNotFoundError(ClinicError):
 class DuplicateMedicalRecordError(ClinicError):
     """Dilempar jika nomor rekam medis (no_rm) sudah terdaftar."""
     pass
+
+
+class AuthenticationError(ClinicError):
+    """Dilempar jika login gagal atau kredensial tidak valid."""
+    pass
+
+
+class UsernameAlreadyExistsError(ClinicError):
+    """Dilempar jika username akun sudah digunakan."""
+    pass
+
+
+class AccountNotFoundError(ClinicError):
+    """Dilempar jika akun pengguna tidak ditemukan."""
+    pass
+
+
+class InvalidAccountDataError(ClinicError):
+    """Dilempar jika data akun (username/password) tidak valid."""
+    pass
+
+
+class UnauthorizedActionError(ClinicError):
+    """Dilempar jika pengguna mencoba melakukan aksi di luar hak aksesnya."""
+    pass
