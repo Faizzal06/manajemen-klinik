@@ -51,7 +51,7 @@ def render_page(
     elif menu == "Manajemen Pasien":
         render_patients_page(repo)
     elif menu == "Manajemen Dokter":
-        render_doctors_page(repo)
+        render_doctors_page(repo, auth_service)
     elif menu == "Janji & Pemeriksaan":
         render_appointments_page(repo)
     elif menu == "Janji Saya":

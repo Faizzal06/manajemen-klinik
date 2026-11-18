@@ -2,6 +2,8 @@ from config import DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME
 from database import AccountRepository, ClinicRepository
 from models import Account, PatientAccount
 
+from .security import hash_password, validate_password, validate_username
+
 
 class AuthService:
     """Layanan autentikasi, registrasi, dan pengelolaan akun pengguna."""
@@ -41,8 +43,22 @@ class AuthService:
     def create_doctor_account(
         self, doctor_id: int, username: str, password: str
     ) -> int:
-        # TODO (Anggota 3): Validasi, hash password, lalu buat akun dokter.
-        pass
+        """Membuat akun login dokter setelah validasi data akun.
+
+        Raise DoctorNotFoundError jika data dokter tidak ada, serta
+        UsernameAlreadyExistsError / InvalidAccountDataError jika data akun
+        tidak valid atau sudah dipakai.
+        """
+        self._clinic_repo.get_doctor_by_id(doctor_id)
+
+        username = username.strip()
+        validate_username(username)
+        validate_password(password)
+
+        password_hash = hash_password(password)
+        return self._account_repo.create_doctor_account(
+            doctor_id, username, password_hash
+        )
 
     def change_password(
         self, account_id: int, old_password: str, new_password: str

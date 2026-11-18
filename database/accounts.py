@@ -1,5 +1,12 @@
+import sqlite3
+
 from models import Account
-from exceptions import AccountNotFoundError
+from exceptions import (
+    AccountNotFoundError,
+    DoctorNotFoundError,
+    InvalidAccountDataError,
+    UsernameAlreadyExistsError,
+)
 from .connection import get_connection
 
 
@@ -28,8 +35,35 @@ class AccountRepository:
     def create_doctor_account(
         self, doctor_id: int, username: str, password_hash: str
     ) -> int:
-        # TODO (Anggota 3): Insert akun dokter yang terhubung ke doctor_id
-        pass
+        """Membuat akun login untuk dokter dan mengembalikan ID akun."""
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                """
+                INSERT INTO users (username, password_hash, role, doctor_id)
+                VALUES (?, ?, 'dokter', ?)
+                """,
+                (username, password_hash, doctor_id),
+            )
+            conn.commit()
+            return int(cursor.lastrowid)
+        except sqlite3.IntegrityError as exc:
+            pesan = str(exc).lower()
+            if "users.username" in pesan:
+                raise UsernameAlreadyExistsError(
+                    f"Username '{username}' sudah digunakan."
+                ) from exc
+            if "users.doctor_id" in pesan:
+                raise InvalidAccountDataError(
+                    "Dokter ini sudah memiliki akun login."
+                ) from exc
+            if "foreign key" in pesan:
+                raise DoctorNotFoundError(
+                    f"Dokter dengan ID {doctor_id} tidak ditemukan."
+                ) from exc
+            raise
+        finally:
+            conn.close()
 
     # ==========================================
     # READ

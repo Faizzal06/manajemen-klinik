@@ -51,25 +51,109 @@ class ClinicRepository:
     # ==========================================
     # CRUD DOKTER (Tanggung Jawab: Anggota 3)
     # ==========================================
+    def _row_to_doctor(self, row) -> Doctor:
+        """Mengubah satu baris tabel doctors menjadi objek Doctor."""
+        return Doctor(
+            doctor_id=row["id"],
+            nama=row["nama"],
+            alamat=row["alamat"] or "",
+            no_telepon=row["no_telepon"] or "",
+            spesialisasi=row["spesialisasi"],
+            jadwal_praktik=row["jadwal_praktik"],
+        )
+
     def add_doctor(self, doctor: Doctor) -> int:
-        # TODO (Anggota 3): Insert dokter ke tabel doctors
-        pass
+        """Menyimpan dokter baru dan mengembalikan ID hasil insert."""
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                """
+                INSERT INTO doctors (nama, alamat, no_telepon, spesialisasi, jadwal_praktik)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    doctor.nama,
+                    doctor.alamat,
+                    doctor.no_telepon,
+                    doctor.spesialisasi,
+                    doctor.jadwal_praktik,
+                ),
+            )
+            conn.commit()
+            doctor.id = int(cursor.lastrowid)
+            return doctor.id
+        finally:
+            conn.close()
 
     def get_all_doctors(self) -> list[Doctor]:
-        # TODO (Anggota 3): Ambil seluruh daftar dokter
-        pass
+        """Mengambil seluruh dokter, diurutkan berdasarkan nama."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM doctors ORDER BY nama COLLATE NOCASE, id"
+            ).fetchall()
+            return [self._row_to_doctor(row) for row in rows]
+        finally:
+            conn.close()
 
     def get_doctor_by_id(self, doctor_id: int) -> Doctor:
-        # TODO (Anggota 3): Ambil 1 dokter; raise DoctorNotFoundError jika tidak ada
-        pass
+        """Mengambil satu dokter; raise DoctorNotFoundError jika tidak ada."""
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM doctors WHERE id = ?", (doctor_id,)
+            ).fetchone()
+            if row is None:
+                raise DoctorNotFoundError(
+                    f"Dokter dengan ID {doctor_id} tidak ditemukan."
+                )
+            return self._row_to_doctor(row)
+        finally:
+            conn.close()
 
     def update_doctor(self, doctor: Doctor) -> None:
-        # TODO (Anggota 3): Update data dokter
-        pass
+        """Memperbarui data dokter; raise DoctorNotFoundError jika tidak ada."""
+        if doctor.id is None:
+            raise DoctorNotFoundError("Data dokter belum memiliki ID.")
+
+        conn = self._connect()
+        try:
+            cursor = conn.execute(
+                """
+                UPDATE doctors
+                SET nama = ?, alamat = ?, no_telepon = ?, spesialisasi = ?,
+                    jadwal_praktik = ?
+                WHERE id = ?
+                """,
+                (
+                    doctor.nama,
+                    doctor.alamat,
+                    doctor.no_telepon,
+                    doctor.spesialisasi,
+                    doctor.jadwal_praktik,
+                    doctor.id,
+                ),
+            )
+            conn.commit()
+            if cursor.rowcount == 0:
+                raise DoctorNotFoundError(
+                    f"Dokter dengan ID {doctor.id} tidak ditemukan."
+                )
+        finally:
+            conn.close()
 
     def delete_doctor(self, doctor_id: int) -> None:
-        # TODO (Anggota 3): Hapus data dokter berdasarkan ID
-        pass
+        """Menghapus dokter; raise DoctorNotFoundError jika tidak ada."""
+        conn = self._connect()
+        try:
+            cursor = conn.execute("DELETE FROM doctors WHERE id = ?", (doctor_id,))
+            conn.commit()
+            if cursor.rowcount == 0:
+                raise DoctorNotFoundError(
+                    f"Dokter dengan ID {doctor_id} tidak ditemukan."
+                )
+        finally:
+            conn.close()
 
     # ==========================================
     # CRUD JANJI & PEMERIKSAAN (Anggota 4)
