@@ -1,4 +1,16 @@
+import re
+from datetime import date
+
 from .person import Person
+
+# Format nomor rekam medis: RM-0001, RM-0002, dst.
+_POLA_NO_RM = re.compile(r"RM-(\d{4,})")
+
+# Pemetaan jenis kelamin yang diterima (tanpa membedakan huruf besar/kecil).
+_JENIS_KELAMIN = {
+    "laki-laki": "Laki-laki",
+    "perempuan": "Perempuan",
+}
 
 
 class Patient(Person):
@@ -15,9 +27,10 @@ class Patient(Person):
         jenis_kelamin: str,
     ):
         super().__init__(patient_id, nama, alamat, no_telepon)
-        self.__no_rm = no_rm
-        self.__tanggal_lahir = tanggal_lahir
-        self.__jenis_kelamin = jenis_kelamin
+        # Lewat setter agar validasi data pasien selalu dijalankan.
+        self.no_rm = no_rm
+        self.tanggal_lahir = tanggal_lahir
+        self.jenis_kelamin = jenis_kelamin
 
     # --- Properties ---
     @property
@@ -26,8 +39,15 @@ class Patient(Person):
 
     @no_rm.setter
     def no_rm(self, value: str) -> None:
-        # TODO (Anggota 2): Validasi format nomor rekam medis
-        self.__no_rm = value
+        if not isinstance(value, str):
+            raise ValueError("Nomor rekam medis harus berformat RM-0001.")
+
+        no_rm = value.strip().upper()
+        cocok = _POLA_NO_RM.fullmatch(no_rm)
+        if cocok is None or int(cocok.group(1)) < 1:
+            raise ValueError("Nomor rekam medis harus berformat RM-0001.")
+
+        self.__no_rm = no_rm
 
     @property
     def tanggal_lahir(self) -> str:
@@ -35,7 +55,20 @@ class Patient(Person):
 
     @tanggal_lahir.setter
     def tanggal_lahir(self, value: str) -> None:
-        self.__tanggal_lahir = value
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Tanggal lahir wajib diisi dengan format YYYY-MM-DD.")
+
+        try:
+            tanggal = date.fromisoformat(value.strip())
+        except ValueError as exc:
+            raise ValueError(
+                "Tanggal lahir harus berformat YYYY-MM-DD."
+            ) from exc
+
+        if tanggal > date.today():
+            raise ValueError("Tanggal lahir tidak boleh di masa depan.")
+
+        self.__tanggal_lahir = tanggal.isoformat()
 
     @property
     def jenis_kelamin(self) -> str:
@@ -43,17 +76,30 @@ class Patient(Person):
 
     @jenis_kelamin.setter
     def jenis_kelamin(self, value: str) -> None:
-        # TODO (Anggota 2): Validasi jenis kelamin ('Laki-laki' / 'Perempuan')
-        self.__jenis_kelamin = value
+        if not isinstance(value, str):
+            raise ValueError("Jenis kelamin harus 'Laki-laki' atau 'Perempuan'.")
+
+        jenis_kelamin = _JENIS_KELAMIN.get(value.strip().lower())
+        if jenis_kelamin is None:
+            raise ValueError("Jenis kelamin harus 'Laki-laki' atau 'Perempuan'.")
+
+        self.__jenis_kelamin = jenis_kelamin
 
     # --- Implementasi Polymorphism ---
     def get_role(self) -> str:
         return "Pasien"
 
     def get_info(self) -> str:
-        # TODO (Anggota 2): Sesuaikan format tampilan ringkasan pasien
-        return f"[{self.no_rm}] {self.nama} ({self.jenis_kelamin})"
+        return (
+            f"[{self.no_rm}] {self.nama} "
+            f"({self.jenis_kelamin}, {self.hitung_umur()} tahun)"
+        )
 
     def hitung_umur(self) -> int:
-        # TODO (Anggota 2): Hitung umur berdasarkan self.tanggal_lahir
-        pass
+        """Menghitung umur pasien berdasarkan tanggal lahir."""
+        lahir = date.fromisoformat(self.__tanggal_lahir)
+        hari_ini = date.today()
+        umur = hari_ini.year - lahir.year
+        if (hari_ini.month, hari_ini.day) < (lahir.month, lahir.day):
+            umur -= 1
+        return max(umur, 0)

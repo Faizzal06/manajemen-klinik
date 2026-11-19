@@ -5,6 +5,7 @@ from exceptions import (
     AccountNotFoundError,
     DoctorNotFoundError,
     InvalidAccountDataError,
+    PatientNotFoundError,
     UsernameAlreadyExistsError,
 )
 from .connection import get_connection
@@ -27,10 +28,47 @@ class AccountRepository:
         pass
 
     def create_patient_account(
-        self, patient_id: int, username: str, password_hash: str
+        self,
+        patient_id: int,
+        username: str,
+        password_hash: str,
+        conn=None,
     ) -> int:
-        # TODO (Anggota 2): Insert akun pasien yang terhubung ke patient_id
-        pass
+        """Membuat akun login pasien yang terhubung ke patient_id.
+
+        Parameter ``conn`` dipakai oleh AuthService agar data pasien dan akun
+        dapat disimpan dalam satu transaksi.
+        """
+        koneksi = conn if conn is not None else self._connect()
+        try:
+            cursor = koneksi.execute(
+                """
+                INSERT INTO users (username, password_hash, role, patient_id)
+                VALUES (?, ?, 'pasien', ?)
+                """,
+                (username, password_hash, patient_id),
+            )
+            if conn is None:
+                koneksi.commit()
+            return int(cursor.lastrowid)
+        except sqlite3.IntegrityError as exc:
+            pesan = str(exc).lower()
+            if "users.username" in pesan:
+                raise UsernameAlreadyExistsError(
+                    f"Username '{username}' sudah digunakan."
+                ) from exc
+            if "users.patient_id" in pesan:
+                raise InvalidAccountDataError(
+                    "Pasien ini sudah memiliki akun login."
+                ) from exc
+            if "foreign key" in pesan:
+                raise PatientNotFoundError(
+                    f"Pasien dengan ID {patient_id} tidak ditemukan."
+                ) from exc
+            raise
+        finally:
+            if conn is None:
+                koneksi.close()
 
     def create_doctor_account(
         self, doctor_id: int, username: str, password_hash: str

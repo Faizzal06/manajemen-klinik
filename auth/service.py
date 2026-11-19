@@ -1,6 +1,6 @@
 from config import DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME
-from database import AccountRepository, ClinicRepository
-from models import Account, PatientAccount
+from database import AccountRepository, ClinicRepository, get_connection
+from models import Account, Patient, PatientAccount
 
 from .security import hash_password, validate_password, validate_username
 
@@ -36,9 +36,53 @@ class AuthService:
         tanggal_lahir: str,
         jenis_kelamin: str,
     ) -> PatientAccount:
-        # TODO (Anggota 2): Validasi input, buat no_rm otomatis, simpan pasien + akun
-        # dalam satu transaksi, lalu kembalikan PatientAccount.
-        pass
+        """Mendaftarkan pasien baru beserta akun login dalam satu transaksi.
+
+        ``no_rm`` dibuat otomatis. Jika pembuatan akun gagal, data pasien
+        ikut dibatalkan sehingga tidak ada pasien tanpa akun.
+        """
+        username = username.strip()
+        validate_username(username)
+        validate_password(password)
+
+        nama = (nama or "").strip()
+        if not nama:
+            raise ValueError("Nama pasien tidak boleh kosong.")
+
+        password_hash = hash_password(password)
+
+        conn = (
+            get_connection(self._clinic_repo.db_path)
+            if self._clinic_repo.db_path
+            else get_connection()
+        )
+        try:
+            patient = Patient(
+                patient_id=None,
+                no_rm=self._clinic_repo.next_no_rm(conn=conn),
+                nama=nama,
+                alamat=(alamat or "").strip(),
+                no_telepon=(no_telepon or "").strip(),
+                tanggal_lahir=tanggal_lahir,
+                jenis_kelamin=jenis_kelamin,
+            )
+            patient_id = self._clinic_repo.add_patient(patient, conn=conn)
+            account_id = self._account_repo.create_patient_account(
+                patient_id, username, password_hash, conn=conn
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+        return PatientAccount(
+            account_id=account_id,
+            username=username,
+            nama=patient.nama,
+            patient_id=patient_id,
+        )
 
     def create_doctor_account(
         self, doctor_id: int, username: str, password: str
